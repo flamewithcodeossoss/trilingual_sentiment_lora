@@ -1,5 +1,93 @@
 import streamlit as st
 import plotly.graph_objects as go
+from src.api.api import analyze_sentiment
+
+st.set_page_config(
+    page_title="Trilingual Sentiment Analysis",
+    page_icon="💬",
+    layout="centered",
+)
+
+if "input_text" not in st.session_state:
+    st.session_state["input_text"] = ""
+
+st.title("Trilingual Sentiment Analysis")
+st.caption("English • Arabic • French — XLM-R + LoRA")
+
+with st.sidebar:
+    st.header("Settings")
+    language = st.selectbox("Language", ["en", "ar", "fr"], index=0)
+    st.info("The model is multilingual; language selection is for examples and UX.")
+
+examples = {
+    "en": "I absolutely love this product. It's amazing!",
+    "ar": "هذا المنتج رائع جدًا وأنا سعيد به.",
+    "fr": "Ce service est terrible, je suis déçu.",
+}
+
+st.markdown("### Quick examples")
+cols = st.columns(3)
+for i, (lng, ex) in enumerate(examples.items()):
+    with cols[i]:
+        if st.button(f"Try {lng.upper()}", key=f"ex_{lng}"):
+            st.session_state["input_text"] = ex
+            # Streamlit >=1.26: use st.rerun()
+            st.rerun()
+
+text = st.text_area(
+    "Enter text",
+    value=st.session_state.get("input_text", ""),
+    placeholder="Type a sentence…",
+    height=160,
+    key="input_text",
+)
+
+cols_actions = st.columns([1, 1, 2])
+with cols_actions[0]:
+    analyze = st.button("Analyze", type="primary")
+with cols_actions[1]:
+    clear = st.button("Clear")
+
+if clear:
+    st.session_state["input_text"] = ""
+    st.rerun()
+
+if analyze:
+    if not text.strip():
+        st.warning("Please enter some text to analyze.")
+    else:
+        with st.spinner("Analyzing…"):
+            result = analyze_sentiment(text)
+        sentiment = result["sentiment"].title()
+        scores = result.get("scores", {})
+
+        # Display main prediction as a colored badge
+        color_map = {"Negative": "#e74c3c", "Neutral": "#95a5a6", "Positive": "#2ecc71"}
+        badge_color = color_map.get(sentiment, "#3498db")
+        st.markdown(
+            f"<div style='padding:8px 12px;border-radius:8px;background:{badge_color};color:white;display:inline-block;'>Prediction: {sentiment}</div>",
+            unsafe_allow_html=True,
+        )
+
+        # Plot confidence scores
+        labels = list(scores.keys())
+        values = [float(scores[k]) for k in labels]
+
+        fig = go.Figure(
+            data=[go.Bar(x=labels, y=values, marker_color=[color_map.get(k.title(), "#3498db") for k in labels])]
+        )
+        fig.update_layout(
+            title="Confidence Scores",
+            yaxis=dict(range=[0, 1], title="score"),
+            xaxis=dict(title="label"),
+            margin=dict(l=20, r=20, t=40, b=20),
+            height=300,
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+st.markdown("---")
+st.caption("Model: XLM-R base with LoRA adapter. This UI loads the model once.")
+import plotly.graph_objects as go
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from peft import PeftModel
 import torch
