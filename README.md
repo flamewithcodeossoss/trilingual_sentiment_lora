@@ -3,7 +3,7 @@
 Multilingual sentiment analysis (English/Arabic/French) using XLM-R base with a LoRA adapter, bundled with a simple Streamlit app.
 
 ## Features
-- Multilingual sentiment prediction: English, Arabic, French.
+- Multilingual sentiment prediction: English, Arabic, Spanish.
 - Streamlit UI with example inputs and confidence visualizations.
 - Clean module layout: helpers, models, and API interface.
 - Simple config loader for future parameterization.
