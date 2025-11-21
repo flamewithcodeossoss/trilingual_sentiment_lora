@@ -40,7 +40,7 @@ Multilingual sentiment analysis (English/Arabic/French) using XLM-R base with a 
 
 ## Usage
 - Enter text in the main input and click "Analyze".
-- Use the example buttons (EN/AR/FR) to populate sample inputs.
+- Use the example buttons (EN/AR/SP) to populate sample inputs.
 - The app displays the predicted sentiment and confidence scores.
 
 ## Configuration
